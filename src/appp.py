@@ -229,4 +229,4 @@ def toggle_dark_mode(is_dark):
         return SIDEBAR_STYLE, CONTENT_STYLE , FOOTER_STYLE
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run()
