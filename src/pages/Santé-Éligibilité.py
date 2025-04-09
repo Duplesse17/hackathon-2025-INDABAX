@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc, Input, Output
 import pandas as pd
 import plotly.express as px
-import re 
+import re
 
 # ============================== CONFIGURATION ==============================
 
@@ -69,7 +69,7 @@ layout = html.Div([
 
     # ========== FILTRES EN PLEINE LARGEUR ==========
     html.Div([
-    
+
     # 1ère ligne : Religion - Arrondissement - Sexe
     html.Div([
         html.Div([
@@ -80,7 +80,7 @@ layout = html.Div([
                 multi=True
             )
         ], style={'width': '30%', 'display': 'inline-block', 'margin': '10px'}),
-        
+
         html.Div([
             html.Label('Filtrer par Arrondissement :'),
             dcc.Dropdown(
@@ -89,7 +89,7 @@ layout = html.Div([
                 multi=True
             )
         ], style={'width': '30%', 'display': 'inline-block', 'margin': '10px'}),
-        
+
         html.Div([
             html.Label('Filtrer par Sexe :'),
             dcc.Dropdown(
@@ -99,8 +99,8 @@ layout = html.Div([
             )
         ], style={'width': '30%', 'display': 'inline-block', 'margin': '10px'})
     ], style={'width': '100%', 'display': 'flex'}),
-    
-    
+
+
     # 2ème ligne : Filtre sur l'âge
     html.Div([
         html.Label("Filtrer par Âge :"),
@@ -118,15 +118,9 @@ layout = html.Div([
                 int(df['Age'].max())
             ]
         )
-    ], style={
-        'margin': '20px 10px',
-        'width': '95%',
-        'backgroundColor': '#f9f9f9',
-        'padding': '15px',
-        'borderRadius': '8px'
-    }),
-    
-    
+    ], ),
+
+
     # 3ème ligne : Situation matrimoniale - Profession
     html.Div([
         html.Div([
@@ -142,7 +136,7 @@ layout = html.Div([
             'display': 'inline-block',
             'margin': '10px'
         }),
-        
+
         html.Div([
             html.Label('Profession :'),
             dcc.Input(
@@ -160,15 +154,15 @@ layout = html.Div([
             'display': 'inline-block',
             'margin': '10px'
         })
-        
+
     ], style={'width': '100%', 'display': 'flex'})
-    
+
 ], style={'width': '100%'})
 ,
 
     # ========== GRAPHIQUES (2 PAR LIGNE) ==========
     html.Div([
-        
+
         # Graphique 1
         html.Div([
             dcc.Graph(id='eligibilite-pie', style={'height': '400px'})
@@ -228,7 +222,7 @@ layout = html.Div([
 )
 def update_graphs(selected_genres, selected_age, selected_religions,
                   selected_arrondissements, selected_sm, selected_profession):
-    
+
     # =========================
     # Étape 1 : Copier le dataframe
     # =========================
@@ -303,7 +297,7 @@ def update_graphs(selected_genres, selected_age, selected_religions,
 
         sante_counts['Raison'] = sante_counts['Raison'].apply(extraire_contenu)
         sante_counts = sante_counts.sort_values(by='Nombre', ascending=True)
-    
+
         fig_raisons_sante = px.bar(
             sante_counts,
             x='Nombre',
@@ -414,12 +408,19 @@ def update_graphs(selected_genres, selected_age, selected_religions,
 
     else:
         fig_hemoglobine = px.histogram(title="Aucune donnée à afficher")
-    
-    
+
+
     # Convertir en datetime
-    filtered_df['Si oui preciser la date du dernier don.'] = pd.to_datetime(
-        filtered_df['Si oui preciser la date du dernier don.'], format="%d/%m/%Y",errors='coerce'
-    )
+    def convert_to_datetime(value):
+        try:
+            return pd.to_datetime(value)
+        except:
+            try:
+                return pd.to_datetime("1900-01-01") + pd.to_timedelta(int(value) - 2, unit='D')
+            except:
+                return pd.NaT
+    filtered_df['Si oui preciser la date du dernier don.'] = filtered_df['Si oui preciser la date du dernier don.'].apply(convert_to_datetime)
+
 
     # Extraire uniquement l'année
     filtered_df['Année'] = filtered_df['Si oui preciser la date du dernier don.'].dt.year

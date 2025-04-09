@@ -1,26 +1,221 @@
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, callback
 import pandas as pd
 import plotly.express as px
 import dash_bootstrap_components as dbc
 
 dash.register_page(__name__, path='/donneurs')
 
+layout = html.Div([
+    html.Div(id='donneurs-content')
+])
+
+@callback(
+    Output('donneurs-content', 'children'),
+    Input('auth-status', 'data')
+)
+
+def check_auth_status(auth_status):
+    if auth_status:
+        return create_dashboard()
+    else:
+        return html.Div([
+            html.H3("Vous devez être connecté pour accéder à cette page.", className="text-danger"),
+            dcc.Link("Retour à la page de connexion", href="/login")
+        ])
+def create_dashboard():
+
+    # Layout de l'application
+    layout = dbc.Container([
+
+        html.Br(),
+
+        html.Div([
+            html.H1("🩸 Analyse des Donneurs de Sang 2019", className="text-center mb-4 fw-bold", style={
+        'textAlign': 'center',
+        'marginBottom': '30px',
+        'color': '#2E86C1',
+        'fontWeight': 'bold'
+    }),
+            #html.P("Un aperçu statistique sur la population des donneurs", className="text-center text-muted mb-5")
+        ]),
+
+        # ========================
+        # KPIs (placeholders)
+        # ========================
+        dbc.Row(id='kpi-cards', justify="center", className="mb-5 gx-4"),
+
+        # ========================
+        # FILTRES
+        # ========================
+            # Première ligne avec Sexe et Groupe Sanguin
+        dbc.Row([
+            # Filtre Sexe
+            dbc.Col([
+                html.Label("Filtrer par Sexe :"),
+                dcc.Dropdown(
+                    id='sexe-filter',
+                    options=[{'label': sexe, 'value': sexe} for sexe in df_donneurs_original['Sexe'].unique()],
+                    multi=True,
+                    placeholder="Choisissez le sexe"
+                )
+            ], md=4),
+
+            dbc.Col([
+                html.Label("Filtrer par Phenotype :"),
+                dcc.Dropdown(
+                    id='phenotype-filter',
+                    options=[{'label': phenotype, 'value': phenotype} for phenotype in df_donneurs_original['Phenotype'].unique()],
+                    multi=True,
+                    placeholder="Choisissez le phenotype"
+                )
+            ], md=4),
+
+            # Filtre Groupe Sanguin
+            dbc.Col([
+                html.Label("Filtrer par Groupe Sanguin :"),
+                dcc.Dropdown(
+                    id='groupe-sanguin-filter',
+                    options=[{'label': groupe, 'value': groupe} for groupe in df_donneurs_original['Groupe Sanguin ABO / Rhesus'].unique()],
+                    multi=True,
+                    placeholder="Choisissez le groupe sanguin"
+                )
+            ], md=4),
+        ], className="mb-4"),  # petite marge en dessous
+
+        # Deuxième ligne avec le filtre Âge seul
+        dbc.Row([
+            dbc.Col([
+                html.Label("Filtrer par Âge :"),
+                dcc.RangeSlider(
+                    id='age-filter',
+                    min=int(df_donneurs_original['Age'].min()),
+                    max=int(df_donneurs_original['Age'].max()),
+                    step=1,
+                    marks={i: str(i) for i in range(
+                        int(df_donneurs_original['Age'].min()),
+                        int(df_donneurs_original['Age'].max()) + 1, 10)
+                    },
+                    value=[
+                        int(df_donneurs_original['Age'].min()),
+                        int(df_donneurs_original['Age'].max())
+                    ]
+                )
+            ], md=12),  # prend toute la largeur
+        ], className="mb-5"),
+
+        # ========================
+        # Graphiques (placeholders)
+        # ========================
+        dbc.Row([
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    html.H5("Répartition des donneurs par sexe", className="card-title text-center"),
+                    dcc.Graph(id='fig-sexe', config={"displayModeBar": False})
+                ])
+            ], className="shadow-sm rounded-4"), md=6),
+            dbc.Col(
+        dbc.Card(
+            dbc.CardBody([
+                html.Div([
+                    # Icône en haut pour donner du sens
+                    html.Div([
+                        html.I(className="fas fa-tint", style={
+                            'fontSize': '30px',
+                            'color': '#3498DB',
+                            'marginBottom': '10px'
+                        }),
+                    ], style={'textAlign': 'center'}),
+
+                    # Valeur principale
+                    html.Span(id='pourcentage-sang-total', style={
+                        'fontSize': '90px',  # Moins gros pour être plus élégant
+                        'fontWeight': '800',
+                        'color': '#3498DB',
+                        'textShadow': '1px 3px 10px rgba(0,0,0,0.15)',
+                        'display': 'block',
+                        'marginBottom': '15px',
+                        'letterSpacing': '2px'
+                    }),
+
+                    # Sous-titre
+                    html.H6("Donations Sang Total", style={
+                        'fontWeight': '600',
+                        'color': '#5f6368',
+                        'marginBottom': '8px'
+                    }),
+
+                    # Description additionnelle
+                    html.Strong("donation de type F en 2019", style={
+                        'fontSize': '16px',
+                        'color': '#2C3E50',
+                        'display': 'block'
+                    }),
+                ], style={'textAlign': 'center'})  # Centrage global
+                    ]),
+                    className="shadow rounded-4",  # Shadow plus douce
+                    style={
+                        'backgroundColor': '#ffffff',
+                        'border': '1px solid #f0f0f0',
+                        'padding': '20px',
+                        'transition': '0.3s',
+                        'cursor': 'pointer'
+                    }
+                ),
+                md=6,
+            ),
+
+        ], className="mb-4 gx-4"),
+
+        dbc.Row([
+            dbc.Col(
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5("Répartition des groupes sanguins", className="card-title text-center"),
+                        dcc.Graph(id='fig-groupe', config={"displayModeBar": False})
+                    ])
+                ], className="shadow-sm rounded-4"), md=6),
+
+            dbc.Col(dbc.Card([
+                dbc.CardBody([
+                    html.H5("Distribution des âges", className="card-title text-center"),
+                    dcc.Graph(id='fig-age', config={"displayModeBar": False})
+                ])
+            ], className="shadow-sm rounded-4"), md=6),
+        ], className="mb-5 gx-4"),
+
+        dbc.Row([
+            dbc.Col(
+                dbc.Card([
+                    dbc.CardBody([
+                        html.H5("Répartition des Phénotypes", className="card-title text-center"),
+                        dcc.Graph(id='fig-phenotype', config={"displayModeBar": False})
+                    ])
+                ], className="shadow-sm rounded-4"), md=12
+            ),
+        ], className="mb-5 gx-4")
+    ])
+
+    
+    return layout
+
 # Styles pour les KPI cards
 kpi_card_style = {
-    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',  # Dégradé !
-    'color': 'white',
-    'padding': '10px',
-    'border-radius': '15px',
-    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',
-    'width': '220px',
-    'textAlign': 'center',
-    'display': 'flex',
-    'flexDirection': 'column',
-    'justifyContent': 'center',
-    'alignItems': 'center',
-    'transition': 'transform 0.2s',
-    'cursor': 'pointer'
+    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',  # Dégradé chaud
+    'color': 'white',                       # Texte en blanc
+    'padding': '20px',                      # Espace intérieur
+    'border-radius': '15px',                # Coins arrondis
+    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',  # Ombre douce
+    'width': '70%',                         # Largeur responsive
+    'maxWidth': '200px',                    # Limite maximale
+    'minWidth': '150px',                    # Limite minimale
+    'textAlign': 'center',                  # Texte centré
+    'display': 'flex',                      # Flexbox
+    'flexDirection': 'column',              # Colonne
+    'justifyContent': 'center',             # Centré verticalement
+    'alignItems': 'center',                 # Centré horizontalement
+    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',  # Transition douce
+    'cursor': 'pointer',
 }
 
 # Lecture des données donneurs
@@ -31,10 +226,11 @@ df_donneurs_original['Age'] = pd.to_numeric(df_donneurs_original['Age'], errors=
 df_donneurs_original = df_donneurs_original.dropna(subset=['Age', 'Sexe'])
 
 # Fonction pour filtrer les données
-def filter_data(age_range, sexe, groupe_sanguin):
+def filter_data(phenotype,age_range, sexe, groupe_sanguin):
     df = df_donneurs_original.copy()
     df = df[(df['Age'] >= age_range[0]) & (df['Age'] <= age_range[1])]
-
+    if phenotype:
+        df = df[df['Phenotype'].isin(phenotype)]
     if sexe:
         df = df[df['Sexe'].isin(sexe)]
 
@@ -42,167 +238,11 @@ def filter_data(age_range, sexe, groupe_sanguin):
         df = df[df['Groupe Sanguin ABO / Rhesus'].isin(groupe_sanguin)]
 
     return df
-
-# Layout de l'application
-layout = dbc.Container([
-
-    html.Br(),
-
-    html.Div([
-        html.H1("🩸 Analyse des Donneurs de Sang 2019", className="text-center mb-4 fw-bold", style={'color': '#2c3e50'}),
-        #html.P("Un aperçu statistique sur la population des donneurs", className="text-center text-muted mb-5")
-    ]),
-
-    # ========================
-    # KPIs (placeholders)
-    # ========================
-    dbc.Row(id='kpi-cards', justify="center", className="mb-5 gx-4"),
-
-    # ========================
-    # FILTRES
-    # ========================
-        # Première ligne avec Sexe et Groupe Sanguin
-    dbc.Row([
-        # Filtre Sexe
-        dbc.Col([
-            html.Label("Filtrer par Sexe :"),
-            dcc.Dropdown(
-                id='sexe-filter',
-                options=[{'label': sexe, 'value': sexe} for sexe in df_donneurs_original['Sexe'].unique()],
-                multi=True,
-                placeholder="Choisissez le sexe"
-            )
-        ], md=6),
-
-        # Filtre Groupe Sanguin
-        dbc.Col([
-            html.Label("Filtrer par Groupe Sanguin :"),
-            dcc.Dropdown(
-                id='groupe-sanguin-filter',
-                options=[{'label': groupe, 'value': groupe} for groupe in df_donneurs_original['Groupe Sanguin ABO / Rhesus'].unique()],
-                multi=True,
-                placeholder="Choisissez le groupe sanguin"
-            )
-        ], md=6),
-    ], className="mb-4"),  # petite marge en dessous
-
-    # Deuxième ligne avec le filtre Âge seul
-    dbc.Row([
-        dbc.Col([
-            html.Label("Filtrer par Âge :"),
-            dcc.RangeSlider(
-                id='age-filter',
-                min=int(df_donneurs_original['Age'].min()),
-                max=int(df_donneurs_original['Age'].max()),
-                step=1,
-                marks={i: str(i) for i in range(
-                    int(df_donneurs_original['Age'].min()),
-                    int(df_donneurs_original['Age'].max()) + 1, 10)
-                },
-                value=[
-                    int(df_donneurs_original['Age'].min()),
-                    int(df_donneurs_original['Age'].max())
-                ]
-            )
-        ], md=12),  # prend toute la largeur
-    ], className="mb-5"),
-
-    # ========================
-    # Graphiques (placeholders)
-    # ========================
-    dbc.Row([
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.H5("Répartition des donneurs par sexe", className="card-title text-center"),
-                dcc.Graph(id='fig-sexe', config={"displayModeBar": False})
-            ])
-        ], className="shadow-sm rounded-4"), md=6),
-        dbc.Col(
-    dbc.Card(
-        dbc.CardBody([
-            html.Div([
-                # Icône en haut pour donner du sens
-                html.Div([
-                    html.I(className="fas fa-tint", style={
-                        'fontSize': '30px',
-                        'color': '#3498DB',
-                        'marginBottom': '10px'
-                    }),
-                ], style={'textAlign': 'center'}),
-
-                # Valeur principale
-                html.Span(id='pourcentage-sang-total', style={
-                    'fontSize': '90px',  # Moins gros pour être plus élégant
-                    'fontWeight': '800',
-                    'color': '#3498DB',
-                    'textShadow': '1px 3px 10px rgba(0,0,0,0.15)',
-                    'display': 'block',
-                    'marginBottom': '15px',
-                    'letterSpacing': '2px'
-                }),
-
-                # Sous-titre
-                html.H6("Donations Sang Total", style={
-                    'fontWeight': '600',
-                    'color': '#5f6368',
-                    'marginBottom': '8px'
-                }),
-
-                # Description additionnelle
-                html.Strong("donation de type F en 2019", style={
-                    'fontSize': '16px',
-                    'color': '#2C3E50',
-                    'display': 'block'
-                }),
-            ], style={'textAlign': 'center'})  # Centrage global
-                ]),
-                className="shadow rounded-4",  # Shadow plus douce
-                style={
-                    'backgroundColor': '#ffffff',
-                    'border': '1px solid #f0f0f0',
-                    'padding': '20px',
-                    'transition': '0.3s',
-                    'cursor': 'pointer'
-                }
-            ),
-            md=6,
-        ),
-
-    ], className="mb-4 gx-4"),
-
-    dbc.Row([
-        dbc.Col(
-            dbc.Card([
-                dbc.CardBody([
-                    html.H5("Répartition des groupes sanguins", className="card-title text-center"),
-                    dcc.Graph(id='fig-groupe', config={"displayModeBar": False})
-                ])
-            ], className="shadow-sm rounded-4"), md=6),
-
-        dbc.Col(dbc.Card([
-            dbc.CardBody([
-                html.H5("Distribution des âges", className="card-title text-center"),
-                dcc.Graph(id='fig-age', config={"displayModeBar": False})
-            ])
-        ], className="shadow-sm rounded-4"), md=6),
-    ], className="mb-5 gx-4"),
-
-    dbc.Row([
-        dbc.Col(
-            dbc.Card([
-                dbc.CardBody([
-                    html.H5("Répartition des Phénotypes", className="card-title text-center"),
-                    dcc.Graph(id='fig-phenotype', config={"displayModeBar": False})
-                ])
-            ], className="shadow-sm rounded-4"), md=12
-        ),
-    ], className="mb-5 gx-4")
-])
-
+    
 # ========================
 # CALLBACKS
 # ========================
-@dash.callback(
+@callback(
     Output('kpi-cards', 'children'),
     Output('fig-sexe', 'figure'),
     Output('fig-age', 'figure'),
@@ -210,12 +250,13 @@ layout = dbc.Container([
     Output('fig-phenotype', 'figure'),
     Output('pourcentage-sang-total', 'children'),
 
+    Input('phenotype-filter', 'value'),
     Input('age-filter', 'value'),
     Input('sexe-filter', 'value'),
     Input('groupe-sanguin-filter', 'value')
 )
-def update_dashboard(age_range, sexe, groupe_sanguin):
-    df_filtered = filter_data(age_range, sexe, groupe_sanguin)
+def update_dashboard(phenotype,age_range, sexe, groupe_sanguin):
+    df_filtered = filter_data(phenotype,age_range, sexe, groupe_sanguin)
 
     # ========================
     # KPIs
@@ -385,31 +426,19 @@ def update_dashboard(age_range, sexe, groupe_sanguin):
 
         html.Div([
             html.I(className="fas fa-users fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Total Donneurs"),
+            html.H5("Total Donneurs"),
             html.H2(f"{total_donneurs}")
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #43cea2, #185a9d)'}),
 
         html.Div([
-            html.I(className="fas fa-mars fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Hommes"),
-            html.H2(f"{nb_hommes}")
-        ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #36D1DC, #5B86E5)'}),
-
-        html.Div([
-            html.I(className="fas fa-venus fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Femmes"),
-            html.H2(f"{nb_femmes}")
-        ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #FF758C, #FF7EB3)'}),
-
-        html.Div([
             html.I(className="fas fa-birthday-cake fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Âge Moyen"),
+            html.H5("Âge Moyen"),
             html.H2(f"{age_moyen:.1f} ans")
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #F7971E, #FFD200)'}),
 
         html.Div([
             html.I(className="fas fa-tint fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Groupe Dominant"),
+            html.H5("Groupe Dominant"),
             html.H2(f"{groupe_dominant}")
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #4A00E0, #8E2DE2)'}),
 
@@ -422,3 +451,4 @@ def update_dashboard(age_range, sexe, groupe_sanguin):
     })
 
     return kpi_cards, fig_sexe, fig_age, fig_groupe, fig_phenotype, f"{pourcentage_sang_total:.0f}%"
+    

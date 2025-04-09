@@ -21,24 +21,31 @@ df_femmes = df[df['Genre'] == 'Femme'].copy()
 # 🔹 Styles des KPI
 # =====================
 kpi_card_style = {
-    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',
-    'color': 'white',
-    'padding': '20px',
-    'border-radius': '15px',
-    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',
-    'width': '220px',
-    'textAlign': 'center',
-    'display': 'flex',
-    'flexDirection': 'column',
-    'justifyContent': 'center',
-    'alignItems': 'center',
-    'transition': 'transform 0.2s',
-    'cursor': 'pointer'
+    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',  # Dégradé chaud
+    'color': 'white',                       # Texte en blanc
+    'padding': '20px',                      # Espace intérieur
+    'border-radius': '15px',                # Coins arrondis
+    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',  # Ombre douce
+    'width': '70%',                         # Largeur responsive
+    'maxWidth': '200px',                    # Limite maximale
+    'minWidth': '150px',                    # Limite minimale
+    'textAlign': 'center',                  # Texte centré
+    'display': 'flex',                      # Flexbox
+    'flexDirection': 'column',              # Colonne
+    'justifyContent': 'center',             # Centré verticalement
+    'alignItems': 'center',                 # Centré horizontalement
+    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',  # Transition douce
+    'cursor': 'pointer',
 }
 
 layout = html.Div([
 
-    html.H1("Analyse des Donneuses de Sang", style={'textAlign': 'center', 'margin-bottom': '30px', 'color': 'var(--bs-body-color)'}),
+    html.H2("Analyse des Pottentieles Donneuses de Sang", style={
+        'textAlign': 'center',
+        'marginBottom': '30px',
+        'color': '#2E86C1',
+        'fontWeight': 'bold'
+    }),
 
     # =====================
     # 🔹 KPIs
@@ -47,14 +54,14 @@ layout = html.Div([
 
         html.Div([
             html.I(className="fas fa-users fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Total Femmes"),
-            html.H2(id='kpi-total-femmes')
+            html.H5("Total Femmes"),
+            html.H3(id='kpi-total-femmes')
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)'}),
 
         html.Div([
             html.I(className="fas fa-check-circle fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("% Éligibles"),
-            html.H2(id='kpi-eligibles')
+            html.H5("% Éligibles"),
+            html.H3(id='kpi-eligibles')
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #36D1DC, #5B86E5)'}),
 
         html.Div([
@@ -65,14 +72,14 @@ layout = html.Div([
 
         html.Div([
             html.I(className="fas fa-tint fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("% Déjà Donné"),
+            html.H4("% Déjà Donnée"),
             html.H2(id='kpi-deja-donne')
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #B24592, #F15F79)'}),
 
         html.Div([
             html.I(className="fas fa-exclamation-triangle fa-2x", style={'margin-bottom': '10px'}),
-            html.H4("Raison Dominante"),
-            html.H2(id='kpi-raison-dominante', style={'font-size': '16px'})
+            html.H4("Raison Dominante:"),
+            html.H1(id='kpi-raison-dominante', style={'font-size': '25px'})
         ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #00C9FF, #92FE9D)'})
 
     ], style={
@@ -89,7 +96,7 @@ layout = html.Div([
     html.Div([
 
     html.Div([
-        html.Label('Arrondissement :', style={'font-weight': 'bold'}),
+        html.Label('Arrondissement :', style={'font-weight': 'bold','color': '#333'}),
         dcc.Dropdown(
             df_femmes['Arrondissement de résidence'].dropna().unique(),
             id='arrondissement-filter-femme',
@@ -107,7 +114,7 @@ layout = html.Div([
     }),
 
     html.Div([
-        html.Label('Niveau d\'étude :', style={'font-weight': 'bold'}),
+        html.Label('Niveau d\'étude :', style={'font-weight': 'bold','color': '#333'}),
         dcc.Dropdown(
             df_femmes["Niveau d'etude"].dropna().unique(),
             id='etude-filter-femme',
@@ -125,7 +132,7 @@ layout = html.Div([
     }),
 
     html.Div([
-        html.Label('Situation matrimoniale :', style={'font-weight': 'bold'}),
+        html.Label('Situation matrimoniale :', style={'font-weight': 'bold','color': '#333'}),
         dcc.Dropdown(
             df_femmes['Situation Matrimoniale (SM)'].dropna().unique(),
             id='sm-filter-femme',
@@ -143,7 +150,7 @@ layout = html.Div([
     }
     ),
     html.Div([
-    html.Label('Profession :', style={'font-weight': 'bold'}),
+    html.Label('Profession :', style={'font-weight': 'bold','color': '#333'}),
     dcc.Input(
         id='profession-filter-femme',
         type='text',
@@ -153,7 +160,8 @@ layout = html.Div([
             'width': '100%',
             'padding': '10px',
             'border-radius': '5px',
-            'border': '1px solid #ccc' 
+            'border': '1px solid #ccc' ,
+            
         }
     )
     ], style={
@@ -163,7 +171,8 @@ layout = html.Div([
         'padding': '15px',
         'margin': '10px',
         'width': '250px',
-        'flex': '1'
+        'flex': '1',
+        'color': '#333',
     }),
 
 

@@ -28,26 +28,28 @@ kpi_style = {
 }
 
 kpi_card_style = {
-    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',  # Dégradé !
-    'color': 'white',
-    'padding': '20px',
-    'border-radius': '15px',
-    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',
-    'width': '220px',
-    'textAlign': 'center',
-    'display': 'flex',
-    'flexDirection': 'column',
-    'justifyContent': 'center',
-    'alignItems': 'center',
-    'transition': 'transform 0.2s',
-    'cursor': 'pointer'
+    'background': 'linear-gradient(135deg, #FF7E5F, #FEB47B)',  # Dégradé chaud
+    'color': 'white',                       # Texte en blanc
+    'padding': '20px',                      # Espace intérieur
+    'border-radius': '15px',                # Coins arrondis
+    'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',  # Ombre douce
+    'width': '70%',                         # Largeur responsive
+    'maxWidth': '200px',                    # Limite maximale
+    'minWidth': '150px',                    # Limite minimale
+    'textAlign': 'center',                  # Texte centré
+    'display': 'flex',                      # Flexbox
+    'flexDirection': 'column',              # Colonne
+    'justifyContent': 'center',             # Centré verticalement
+    'alignItems': 'center',                 # Centré horizontalement
+    'transition': 'transform 0.3s ease, box-shadow 0.3s ease',  # Transition douce
+    'cursor': 'pointer',
 }
 kpi_card_hover = {
     'transform': 'scale(1.05)',
 }
 
 layout = html.Div(id='pdf-content', children=[
-    html.H2("Tableau de bord - Pottentiel Donneur", style={
+    html.H3("Tableau de bord - Pottentiel Donneur", style={
         'textAlign': 'center',
         'marginBottom': '30px',
         'color': '#2E86C1',
@@ -57,32 +59,32 @@ layout = html.Div(id='pdf-content', children=[
     html.Div([
         html.Div([
         html.I(className="fas fa-users fa-2x", style={'margin-bottom': '10px'}),
-        html.H4("Donneurs Pottentiel"),
-        html.H2(id='kpi-total')
+        html.H5("Donneurs Pottentiel"),
+        html.H3(id='kpi-total')
     ], style=kpi_card_style),
 
     html.Div([
         html.I(className="fas fa-female fa-2x", style={'margin-bottom': '10px'}),
-        html.H4("Taux de Femmes"),
-        html.H2(id='kpi-femmes')
+        html.H5("Taux de Femmes"),
+        html.H3(id='kpi-femmes')
     ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #B24592, #F15F79)'}),
 
     html.Div([
         html.I(className="fas fa-birthday-cake fa-2x", style={'margin-bottom': '10px'}),
-        html.H4("Âge Moyen"),
-        html.H2(id='kpi-age')
+        html.H5("Âge Moyen"),
+        html.H3(id='kpi-age')
     ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #43C6AC, #191654)'}),
 
     html.Div([
         html.I(className="fas fa-map-marker-alt fa-2x", style={'margin-bottom': '10px'}),
-        html.H4("Arrondissement Dominant"),
-        html.H2(id='kpi-arrondissement')
+        html.H5("Arrondissement Dominant"),
+        html.H3(id='kpi-arrondissement')
     ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #36D1DC, #5B86E5)'}),
 
     html.Div([
         html.I(className="fas fa-check-circle fa-2x", style={'margin-bottom': '10px'}),
-        html.H4("Taux d'Éligibilité"),
-        html.H2(id='kpi-eligibilite')
+        html.H5("Taux d'Éligibilité"),
+        html.H3(id='kpi-eligibilite')
     ], style={**kpi_card_style, 'background': 'linear-gradient(135deg, #00C9FF, #92FE9D)'})
     
 ], style={
@@ -187,8 +189,11 @@ def export_pdf(event):
      Input('eligibilite-filter', 'value')]
 )
 def update_graphs_and_kpis(religion, arrondissement, sexe, age_range, eligiblite):
+    df['Date de naissance'] = pd.to_numeric(df['Date de naissance'], errors='coerce')
     dff = df.copy()
-
+    dff = dff[dff['Date de naissance'].notna()]
+    dff = dff[dff['Date de naissance'] >= 0]  # Filtrer les âges négatifs
+    dff = dff[dff['Date de naissance'] <= 120]  # Filtrer les âges trop élevés
     if eligiblite:
         dff = dff[dff['ÉLIGIBILITÉ AU DON.'].isin(eligiblite)]
     if religion:
@@ -198,11 +203,11 @@ def update_graphs_and_kpis(religion, arrondissement, sexe, age_range, eligiblite
     if sexe:
         dff = dff[dff['Genre'].isin(sexe)]
 
-    dff['Date de naissance'] = pd.to_datetime(dff['Date de naissance'], errors='coerce')
-    dff = dff[dff['Date de naissance'].notna()]
+    #dff['Date de naissance'] = pd.to_datetime(dff['Date de naissance'], errors='coerce')
+    #dff = dff[dff['Date de naissance'].notna()]
 
-    dff['Age'] = pd.to_datetime('today').year - dff['Date de naissance'].dt.year
-    dff = dff[(dff['Age'] >= age_range[0]) & (dff['Age'] <= age_range[1])]
+    #dff['Age'] = pd.to_datetime('today').year - dff['Date de naissance'].dt.year
+    dff = dff[(dff['Date de naissance'] >= age_range[0]) & (dff['Date de naissance'] <= age_range[1])]
 
     # KPIs
     total_donneurs = len(dff)
